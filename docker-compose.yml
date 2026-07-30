@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: databoard_postgres
+    environment:
+      POSTGRES_USER: databoard_user
+      POSTGRES_PASSWORD: databoard_password
+      POSTGRES_DB: databoard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U databoard_user -d databoard_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: databoard_backend
+    environment:
+      DATABASE_URL: postgresql://databoard_user:databoard_password@postgres:5432/databoard_db
+      SECRET_KEY: databoard-super-secret-jwt-key-2025-xvector
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: databoard_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

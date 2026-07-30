@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/venv/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Build & Vite outputs
+frontend/dist/
+frontend/build/
+.vite/
+
+# Local databases & logs
+*.sqlite
+*.db-journal
+.env
+.env.local
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
