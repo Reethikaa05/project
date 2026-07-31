@@ -3,9 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.db.database import engine, Base, SessionLocal
 from app.api import auth, datasets, analytics
-from app.db.models import User, Dataset, ColumnMetadata, DataRow
+from app.db.models import User, Dataset, DatasetRow
 from app.core.security import get_password_hash
-import json
 
 # Create database tables automatically on startup
 Base.metadata.create_all(bind=engine)
@@ -27,24 +26,23 @@ def seed_initial_data():
         # Seed sample dataset if no dataset exists
         sample_ds = db.query(Dataset).first()
         if not sample_ds:
+            cols_meta = [
+                {"name": "Region", "data_type": "categorical"},
+                {"name": "Quarter", "data_type": "categorical"},
+                {"name": "Sales_USD", "data_type": "numeric"},
+                {"name": "Profit_USD", "data_type": "numeric"},
+            ]
             sample_ds = Dataset(
                 user_id=demo_user.id,
                 name="tech_sales_2025.csv",
+                original_filename="tech_sales_2025.csv",
                 row_count=10,
                 column_count=4,
-                delimiter=","
+                columns_metadata=cols_meta
             )
             db.add(sample_ds)
             db.commit()
             db.refresh(sample_ds)
-
-            cols = [
-                ColumnMetadata(dataset_id=sample_ds.id, name="Region", data_type="categorical"),
-                ColumnMetadata(dataset_id=sample_ds.id, name="Quarter", data_type="categorical"),
-                ColumnMetadata(dataset_id=sample_ds.id, name="Sales_USD", data_type="numeric"),
-                ColumnMetadata(dataset_id=sample_ds.id, name="Profit_USD", data_type="numeric"),
-            ]
-            db.add_all(cols)
 
             rows_data = [
                 {"Region": "North America", "Quarter": "Q1", "Sales_USD": 150000, "Profit_USD": 45000},
@@ -60,7 +58,7 @@ def seed_initial_data():
             ]
 
             for idx, r in enumerate(rows_data):
-                db.add(DataRow(dataset_id=sample_ds.id, row_index=idx, row_data=json.dumps(r)))
+                db.add(DatasetRow(dataset_id=sample_ds.id, row_index=idx, row_data=r))
             
             db.commit()
     except Exception as e:
