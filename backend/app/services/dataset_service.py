@@ -4,30 +4,24 @@ import pandas as pd
 from typing import Tuple, List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.db.models import Dataset, DatasetRow, User
-from app.schemas.dataset import ColumnMetadata
 
 def infer_column_type(series: pd.Series) -> str:
-    # Drop NAs to check non-null data type
     valid_series = series.dropna()
     if valid_series.empty:
         return "text"
     
-    # Check numeric
     if pd.api.types.is_numeric_dtype(series):
         return "numeric"
     
-    # Try converting to numeric if it's object dtype
     try:
         pd.to_numeric(valid_series)
         return "numeric"
     except (ValueError, TypeError):
         pass
     
-    # Check boolean
     if pd.api.types.is_bool_dtype(series):
         return "categorical"
     
-    # Unique ratio check for categorical vs text
     unique_count = valid_series.nunique()
     if unique_count <= max(10, len(valid_series) * 0.2):
         return "categorical"
@@ -39,7 +33,6 @@ class DatasetService:
 
     @staticmethod
     def parse_csv_and_save(db: Session, user_id: int, file_content: bytes, filename: str, dataset_name: str) -> Dataset:
-        # Try reading CSV with various delimiters
         try:
             df = pd.read_csv(io.BytesIO(file_content))
         except Exception:
@@ -48,9 +41,7 @@ class DatasetService:
             except Exception:
                 df = pd.read_csv(io.BytesIO(file_content), sep="\t")
         
-        # Clean column names (strip whitespace)
         df.columns = [str(col).strip() for col in df.columns]
-        
         row_count, column_count = df.shape
         
         columns_meta = []
@@ -59,7 +50,6 @@ class DatasetService:
             dtype_str = infer_column_type(series)
             null_cnt = int(series.isna().sum())
             sample_vals = series.dropna().head(3).tolist()
-            # Ensure JSON serializable sample values
             cleaned_samples = []
             for val in sample_vals:
                 if isinstance(val, (int, float, str, bool)):
@@ -74,7 +64,6 @@ class DatasetService:
                 "sample_values": cleaned_samples
             })
             
-        # Create Dataset record
         dataset = Dataset(
             user_id=user_id,
             name=dataset_name,
@@ -87,10 +76,7 @@ class DatasetService:
         db.commit()
         db.refresh(dataset)
         
-        # Bulk save rows
-        # Convert df to dictionary records (replace NaN with None for valid JSON)
         records = df.where(pd.notnull(df), None).to_dict(orient="records")
-        
         dataset_rows = []
         for idx, record in enumerate(records):
             dataset_rows.append(
@@ -105,6 +91,44 @@ class DatasetService:
         db.commit()
         
         return dataset
+
+    @staticmethod
+    def seed_user_sample_datasets(db: Session, user_id: int):
+        existing_cnt = db.query(Dataset).filter(Dataset.user_id == user_id).count()
+        if existing_cnt > 0:
+            return
+            
+        sample_files = [
+            ("tech_sales_2025.csv", "Tech Sales 2025 (Sample)"),
+            ("global_demographics.csv", "Global Demographics (Sample)"),
+            ("stock_market_prices.csv", "Stock Market Prices (Sample)")
+        ]
+        
+        for filename, display_name in sample_files:
+            possible_paths = [
+                os.path.join(os.getcwd(), "samples", filename),
+                os.path.join(os.getcwd(), "..", "samples", filename),
+                os.path.join(os.path.dirname(__file__), "..", "..", "..", "samples", filename)
+            ]
+            sample_path = None
+            for p in possible_paths:
+                if os.path.exists(p):
+                    sample_path = p
+                    break
+                    
+            if sample_path and os.path.exists(sample_path):
+                try:
+                    with open(sample_path, "rb") as f:
+                        content = f.read()
+                    DatasetService.parse_csv_and_save(
+                        db=db,
+                        user_id=user_id,
+                        file_content=content,
+                        filename=filename,
+                        dataset_name=display_name
+                    )
+                except Exception as e:
+                    print(f"Error seeding {filename} for user {user_id}: {e}")
 
     @staticmethod
     def get_paginated_datasets(db: Session, user_id: int, page: int = 1, limit: int = 10, search: Optional[str] = None) -> Tuple[List[Dataset], int, int]:

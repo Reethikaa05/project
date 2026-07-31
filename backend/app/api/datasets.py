@@ -45,15 +45,27 @@ def list_datasets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    datasets, total, total_pages = DatasetService.get_paginated_datasets(
+    datasets_list, total, total_pages = DatasetService.get_paginated_datasets(
         db=db,
         user_id=current_user.id,
         page=page,
         limit=limit,
         search=search
     )
+    
+    # Auto-seed sample datasets for new users if dataset list is empty
+    if total == 0 and page == 1 and not search:
+        DatasetService.seed_user_sample_datasets(db, current_user.id)
+        datasets_list, total, total_pages = DatasetService.get_paginated_datasets(
+            db=db,
+            user_id=current_user.id,
+            page=page,
+            limit=limit,
+            search=search
+        )
+
     return {
-        "items": datasets,
+        "items": datasets_list,
         "total": total,
         "page": page,
         "limit": limit,
@@ -101,7 +113,6 @@ def load_sample_dataset(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Mapping of sample names to files
     sample_files = {
         "sales": ("tech_sales_2025.csv", "Tech Sales 2025 (Sample)"),
         "demographics": ("global_demographics.csv", "Global Demographics (Sample)"),
@@ -113,7 +124,6 @@ def load_sample_dataset(
         
     filename, display_name = sample_files[sample_name]
     
-    # Path relative to workspace
     possible_paths = [
         os.path.join(os.getcwd(), "samples", filename),
         os.path.join(os.getcwd(), "..", "samples", filename),

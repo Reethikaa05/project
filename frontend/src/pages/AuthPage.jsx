@@ -11,7 +11,8 @@ import {
   Loader2,
   Sparkles,
   ShieldCheck,
-  Film
+  Film,
+  Zap
 } from 'lucide-react';
 
 const AuthPage = () => {
@@ -24,6 +25,33 @@ const AuthPage = () => {
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
+
+  const handleFillDemoAndLogin = async () => {
+    setEmail('demo@databoard.com');
+    setPassword('password123');
+    setIsLogin(true);
+    setError('');
+    setSuccessMsg('');
+    setLoading(true);
+
+    try {
+      await login('demo@databoard.com', 'password123');
+      setSuccessMsg('Logged in with Demo Account!');
+      setTimeout(() => navigate('/'), 500);
+    } catch (err) {
+      // If demo login fails, attempt auto-registration then login
+      try {
+        await register('demo@databoard.com', 'password123');
+        await login('demo@databoard.com', 'password123');
+        setSuccessMsg('Logged in with Demo Account!');
+        setTimeout(() => navigate('/'), 500);
+      } catch (regErr) {
+        setError('Demo login error. Please create a new account.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +79,7 @@ const AuthPage = () => {
       }
       setTimeout(() => navigate('/'), 600);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Authentication failed. Please check your credentials.');
+      setError(err.response?.data?.detail || 'Authentication failed. Please check your credentials or register a new account.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +88,7 @@ const AuthPage = () => {
   return (
     <div className="relative min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 overflow-hidden bg-black text-white">
       
-      {/* 1. Full-screen Video Background (Data Science Control Room Video) */}
+      {/* 1. Full-screen Video Background */}
       <video
         src="/video/login_bg.mp4"
         autoPlay
@@ -99,6 +127,19 @@ const AuthPage = () => {
           <p className="text-xs text-slate-300 mt-1">
             {isLogin ? 'Sign in to access your dataset analytics dashboard' : 'Create an account to start uploading & analyzing datasets'}
           </p>
+        </div>
+
+        {/* 1-CLICK DEMO AUTO-FILL BUTTON */}
+        <div className="mb-6">
+          <button
+            type="button"
+            onClick={handleFillDemoAndLogin}
+            disabled={loading}
+            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20 hover:scale-[1.01] transition-all border border-white/20"
+          >
+            <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+            <span>⚡ 1-Click Demo Login (demo@databoard.com)</span>
+          </button>
         </div>
 
         {/* Auth Mode Toggle Tabs */}
@@ -142,7 +183,7 @@ const AuthPage = () => {
         {/* Auth Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Email Input Container - Flex layout with icon first, zero text overlap */}
+          {/* Email Input Container */}
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Email Address
@@ -162,7 +203,7 @@ const AuthPage = () => {
             </div>
           </div>
 
-          {/* Password Input Container - Flex layout with icon first, zero text overlap */}
+          {/* Password Input Container */}
           <div>
             <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
               Password
