@@ -63,28 +63,28 @@ Below are actual operational screenshots of **DataBoard** in action:
 ```mermaid
 graph TD
     subgraph Client ["Client Layer (React 18 + Vite)"]
-        UI[React UI / Tailwind CSS]
-        AuthCtx[Auth & Theme Context]
-        ECharts[Apache ECharts Visualizer]
-        AxiosClient[Axios Interceptor + JWT Auto-Refresh]
+        UI["React UI / Tailwind CSS"]
+        AuthCtx["Auth & Theme Context"]
+        ECharts["Apache ECharts Visualizer"]
+        AxiosClient["Axios Interceptor + JWT Auto-Refresh"]
     end
 
     subgraph API ["Backend API Layer (FastAPI)"]
-        RouterAuth[/api/auth]
-        RouterDatasets[/api/datasets]
-        RouterAnalytics[/api/analytics]
-        Security[Direct Bcrypt + PyJWT]
+        RouterAuth["/api/auth"]
+        RouterDatasets["/api/datasets"]
+        RouterAnalytics["/api/analytics"]
+        Security["Direct Bcrypt + PyJWT"]
     end
 
     subgraph Service ["Service Layer"]
-        DatasetSvc[Dataset & Schema Parser]
-        AnalyticsSvc[Stats & ECharts Engine]
-        AuthSvc[User Authentication Service]
+        DatasetSvc["Dataset & Schema Parser"]
+        AnalyticsSvc["Stats & ECharts Engine"]
+        AuthSvc["User Authentication Service"]
     end
 
     subgraph Storage ["Persistence Layer"]
-        DB[(PostgreSQL / SQLite)]
-        ORM[SQLAlchemy ORM]
+        DB[("PostgreSQL / SQLite")]
+        ORM["SQLAlchemy ORM"]
     end
 
     UI --> AxiosClient
