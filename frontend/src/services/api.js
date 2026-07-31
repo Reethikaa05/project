@@ -1,7 +1,22 @@
 import axios from 'axios';
 
+// Get Base URL from environment variable or default to Render backend in production
+const getBaseURL = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
+  }
+  // Production fallback to live Render backend
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://databoard-api.onrender.com/api';
+  }
+  return '/api';
+};
+
+const BASE_URL = getBaseURL();
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -64,7 +79,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const res = await axios.post('/api/auth/refresh', {
+        const res = await axios.post(`${BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
 
