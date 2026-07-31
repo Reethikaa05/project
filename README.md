@@ -19,6 +19,18 @@ A high-performance, full-stack Data Analytics platform built with **FastAPI**, *
 
 ---
 
+## 🌐 Live Production Deployments
+
+| Component | Live Production URL | Status |
+| :--- | :--- | :---: |
+| 🌐 **Frontend Web App (Vercel)** | [https://project-eight-sand-34.vercel.app](https://project-eight-sand-34.vercel.app) | ![Vercel](https://img.shields.io/badge/Vercel-Live-success?style=flat-square&logo=vercel) |
+| ⚙️ **Backend API (Render)** | [https://databoard-api.onrender.com](https://databoard-api.onrender.com) | ![Render](https://img.shields.io/badge/Render-Live-success?style=flat-square&logo=render) |
+| 📖 **Interactive Swagger Docs** | [https://databoard-api.onrender.com/docs](https://databoard-api.onrender.com/docs) | ![Swagger](https://img.shields.io/badge/Swagger-Docs-009688?style=flat-square&logo=fastapi) |
+
+> ⚡ **Quick Demo Login**: Click **`⚡ 1-Click Demo Login`** on the login page or use `demo@databoard.com` / `password123`.
+
+---
+
 ## 📸 Application Screenshots Showcase
 
 Below are actual operational screenshots of **DataBoard** in action:
